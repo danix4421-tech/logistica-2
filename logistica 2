@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-Logistics Pro V12.9 - Sheets Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .step { display: none; }
+        .step.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .form-input { width: 100%; background-color: #f8fafc; border: 2px solid #f1f5f9; border-radius: 0.8rem; padding: 0.7rem 0.8rem; font-size: 0.85rem; outline: none; transition: all 0.2s; font-weight: 600; }
+        .form-input:focus { border-color: #3b82f6; background-color: #fff; }
+        .btn-back-ui { background: #fff; color: #64748b; font-weight: 800; padding: 6px 12px; border-radius: 10px; font-size: 9px; border: 1px solid #e2e8f0; display: inline-block; margin-top: 20px; }
+    </style>
+</head>
+<body class="pb-20">
+
+<header id="main-header" class="bg-white border-b border-slate-200 p-2 sticky top-0 z-50">
+    <div class="max-w-xl mx-auto flex justify-between items-center">
+        <h1 class=" font-black text-slate-900">
+                <span class=" text-xl">Pedidos</h1>
+        <div class="flex items-center gap-1">
+            
+    <button onclick="abrirModalVentaRapida()" class=" leading-none bg-orant-500 text-white px-3 py-2 rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-yellow-500 transition-all flex items-center gap-2">
+    ⚡
+</button>
+<button onclick="limpiarTodo()" class="text-slate-500 text-[9px] font-bold uppercase tracking-tighter hover:text-red-500 transition-colors shadow-lg"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+</div>
+       
+        <div id="header-arqueo" class="text-right flex items-center gap-1">
+            <button onclick="sincronizarPedidosDesdeSheets(event)" class="flex items-center text-emerald-600 font-black text-[9px] bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-100 group animate-pulse shadow-lg">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"  />
+    </svg>
+    
+
+
+</button>
+            <div>
+
+                <div id="h-efectivo" class="text-[8px] font-black text-emerald-600 leading-none hidden">$0</div>
+                <div id="h-digital" class="text-[8px] font-black text-purple-500 uppercase leading-none hidden">Caja $0</div>
+                
+                   
+            </div>
+            <button onclick="verHistorial()" class=""><svg class="w-6 h-6 " fill="none" stroke="grey " viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg></button>
+        </div>
+    </div>
+</header>
+
+<main class="p-4 max-w-xl mx-auto">
+    
+<section id="step0" class="step active">
+    <div class="flex justify-between items-end mb-4 px-1">
+        <div>
+            <h3 class="text-[14px] font-black tracking-tighter"></h3>
+        </div>
+        <div class="flex gap-2"></div>
+    </div>
+
+    <div id="contenedor-formulario" class="hidden bg-white rounded-[2rem] p-5 shadow-2xl border border-slate-100 mb-6 border-b-4 border-b-blue-100">
+        <div class="flex justify-between items-center mb-4">
+            <span class="bg-blue-100 text-blue-700 text-[9px] font-black px-2 py-1 rounded-lg uppercase">Editor de Pedido</span>
+            <button onclick="toggleMasivo()" class="text-slate-400 font-black text-[9px] uppercase hover:text-blue-500">Carga Masiva</button>
+        </div>
+
+        <div id="area-masiva" class="hidden mb-4 p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+            <textarea id="input-masivo" rows="4" class="form-input text-xs mb-2" placeholder="Pega desde Sheets..."></textarea>
+            <button onclick="procesarMasivo()" class="w-full bg-blue-100 text-blue-700 font-black py-2 rounded-xl text-[9px] uppercase tracking-widest">Importar Datos</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mb-3">
+            <input type="hidden" id="f-edit-id">
+            <input type="text" id="f-nombre" placeholder="Nombre del cliente" class="form-input col-span-2 border-slate-100">
+            <input type="text" id="f-direccion" placeholder="Dirección exacta" class="form-input col-span-2 border-slate-100">
+            <input type="tel" id="f-telefono" placeholder="WhatsApp" class="form-input col-span-2 border-slate-100">
+            <div class="col-span-1">
+                <label class="text-[8px] font-black text-slate-400 ml-2 uppercase">Envío $</label>
+                <input type="number" id="f-envio" placeholder="0.00" class="form-input border-slate-100">
+            </div>
+            <div class="col-span-1">
+                <label class="text-[8px] font-black text-blue-500 ml-2 uppercase">Total $</label>
+                <input type="number" id="f-total" placeholder="0.00" class="form-input border-blue-100 bg-blue-50 font-bold text-blue-700">
+            </div>
+            <textarea id="f-detalles" placeholder="Detalles o notas del pedido..." rows="2" class="form-input col-span-2 border-slate-100 text-xs"></textarea>
+        </div>
+
+        <div id="contenedor-productos" class="space-y-2 pr-1"></div>
+        <button onclick="agregarFilaProducto()" class="w-full mt-3 py-2 border-2 border-dashed border-slate-100 rounded-xl text-slate-400 font-black text-[10px] uppercase hover:bg-slate-50 transition-colors">
+            + Añadir Producto
+        </button>
+
+        <div class="flex gap-1 mt-2">
+            <button onclick="guardarPedidoFormulario()" class="flex-1 bg-slate-900 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-xs tracking-widest">Guardar en Ruta</button>
+            <button onclick="toggleForm(false)" class="px-5 bg-slate-100 text-slate-500 font-black rounded-2xl text-xs uppercase">X</button>
+        </div>
+    </div>
+
+    <div id="lista-pre-carga" class="space-y-2 mb-8 min-h-[50px]"></div>
+
+    <div class="flex justify-between items-center px-2 mb-20"></div>
+
+    <button id="btn-ir-a-picking" onclick="nextStep(0.5)" class="hidden w-full bg-blue-600 text-white font-black py-6 rounded-3xl shadow-2xl sticky bottom-4 uppercase text-sm tracking-widest">
+        Iniciar Picking
+    </button>
+</section>
+    <!-- Resto de secciones (step_picking, step1, etc.) permanecen iguales, ya que no afectan el formulario. Para brevedad, no las repito aquí, pero en el archivo completo las mantengo. -->
+
+
+
+
+
+
+
+
+
+
+
+    <section id="step_picking" class="step">
+        <h2 class="text-[16px] font-black mb-1">Picking</h2>
+        <div id="lista-picking" class="space-y-3"></div>
+        <button id="btn-picking-done" onclick="asignarLetrasFijas(); nextStep(1);" disabled class="w-full mt-10 bg-slate-200 text-slate-400 font-black py-6 rounded-3xl uppercase">CONTINUAR</button>
+    </section>
+
+    <section id="step1" class="step">
+        <h2 class="text-[16px] font-black mb-1">Carga Furgón</h2>
+        <div id="checklist-furgon" class="space-y-3"></div>
+        <button id="btn-start-route" onclick="nextStep(2)" disabled class="w-full mt-10 bg-slate-200 text-slate-400 font-black py-6 rounded-3xl ">CONTINUAR</button>
+    </section>
+
+
+    <section id="step2" class="step">
+        <div id="next-delivery-info" class=" [2.5rem] p-8 text-white mb-6 "></div>
+        <h3 class="text-xs font-black text-slate-400 uppercase mb-4 ml-2">Próximas paradas</h3>
+        <div id="lista-ruta-activa" class="space-y-3"></div>
+    </section>
+
+    <section id="step3" class="step">
+        <div id="cliente-perfil" class="space-y-4"></div>
+        <div class="grid grid-cols-2 gap-2 mb-4">
+            <button onclick="llamar()" class="bg-blue-500 text-white py-4 rounded-2xl font-black flex flex-col items-center"><span><svg class="w-4 h-4 inline-block mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg></span><span class="text-[10px]">LLAMAR</span></button>
+            <button onclick="abrirMapa()" class="bg-indigo-500 text-white py-4 rounded-2xl font-black flex flex-col items-center"><span><svg class="w-4 h-4 inline-block mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span><span class="text-[10px]">MAPA</span></button>
+        </div>
+        <div id="controles-flujo" class="space-y-3"></div>
+        <div class="mt-4 flex justify">
+            <button onclick="moverAlFinal()" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-xl font-black text-[10px] uppercase">al final</button>
+        </div>
+        <div class="mt-6 flex justify-">
+            <button onclick="cancelarPedido()" class="bg-rose-100 text-red-500  px-4 py-2 rounded-xl  font-bold text-[14px] uppercase tracking-tighter opacity-60"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+        </div>
+    </section>
+
+    <section id="step4" class="step">
+    <div class="mb-4">
+        <h3 class="text-[10px] font-black text-slate-400 uppercase mb-3 ml-2 tracking-widest">Validar Entrega</h3>
+        <div id="multi-venta-selector" class="space-y-3 mb-6"></div>
+        
+        <div class="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100">
+            <div class="bg-slate-900 rounded-[2rem] p-6 text-center text-white mb-4">
+                <p class="text-[9px] font-bold opacity-50 uppercase tracking-widest mb-1">Monto a recibir</p>
+                <p id="total-cobro-consolidado" class="text-5xl font-black">$0</p>
+                <p id="envio-detalle-pequeno" class="text-[10px] font-bold text-slate-400 mt-1 uppercase"></p>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-2" id="grid-metodos-pago">
+    <button type="button" onclick="seleccionarMetodo(this, 'Efectivo')" 
+        class="metodo-btn p-4 border-2 border-slate-100 rounded-2xl font-bold text-[10px] uppercase transition-all flex flex-col items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        Efectivo
+    </button>
+
+    <button type="button" onclick="seleccionarMetodo(this, 'Transferencia Dani')" 
+        class="metodo-btn p-4 border-2 border-slate-100 rounded-2xl font-bold text-[10px] uppercase transition-all flex flex-col items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+        TAPP (DANI)
+    </button>
+
+    <button type="button" onclick="seleccionarMetodo(this, 'Transferencia Dani')" 
+        class="metodo-btn p-4 border-2 border-slate-100 rounded-2xl font-bold text-[10px] uppercase transition-all flex flex-col items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        </svg>
+        RUT (DANI)
+    </button>
+
+    <button type="button" onclick="seleccionarMetodo(this, 'Transferencia Lore')" 
+        class="metodo-btn p-4 border-2 border-slate-100 rounded-2xl font-bold text-[10px] uppercase transition-all flex flex-col items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+        TAPP (LORE)
+    </button>
+</div>
+
+                <input type="hidden" id="metodo-pago" value="">
+
+                <div id="contenedor-vuelto" class="hidden animate-in fade-in">
+                    <input type="number" id="paga-con" oninput="calcularVueltoConsolidado()" placeholder="¿Con cuánto paga?" class="form-input h-14 text-center text-lg mb-2">
+                    <div id="vuelto-box" class="hidden bg-emerald-500 text-white rounded-2xl p-4 text-center animate-bounce">
+                        <p id="vuelto-monto" class="text-xl font-black uppercase"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button id="btn-finalizar-todo" onclick="irAVerificacion()" class="w-full bg-blue-600 text-white font-black py-7 rounded-[2rem] shadow-xl text-lg uppercase tracking-widest">Confirmar Transacción</button>
+</section>
+
+    <section id="step7" class="step">
+        <div class="flex justify-between items-center"></div>
+        <div id="lista-historial" class="space-y-3"></div>
+    </section>
+
+    <div class="text-center">
+        <button id="global-back-btn" onclick="retroceder()" class="btn-back-ui hidden">Volver</button>
+<button id="btn-inicio-home" onclick="irAlInicio()" class="hidden block mx-auto text-slate-400 font-black text-[8px] uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity">
+        🏠Inicio
+    </button>
+
+    </div>
+
+<section id="step5" class="step">
+    <div class="bg-red-500 rounded-[2.5rem] p-6 text-white mb-6 shadow-lg">
+        <h2 class="text-xs font-black uppercase opacity-80 tracking-widest">Paso Final</h2>
+        <h3 class="text-2xl font-black">Verificar Retorno</h3>
+        <p class="text-[10px] font-bold opacity-90 mt-1">Asegúrate de subir estos productos al furgón:</p>
+    </div>
+    
+    <div id="lista-verificacion-devoluciones" class="space-y-3 mb-8">
+        </div>
+
+    <button id="btn-cerrar-ruta" onclick="confirmarFinalTotal()" disabled class="w-full bg-slate-300 text-white font-black py-7 rounded-[2rem] shadow-xl text-lg uppercase">
+        Finalizar Entrega
+    </button>
+</section>
+
+<div id="modal-venta-rapida" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200">
+        <div class="p-8">
+            <h3 class="text-2xl font-black uppercase tracking-tighter text-slate-800 mb-6 flex items-center gap-2">
+                <span class="text-emerald-500 text-3xl">⚡</span> Venta Rápida
+            </h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-slate-400 ml-4 mb-1 block">Código / Producto</label>
+                    <input type="text" id="vr-codigo" placeholder="Ej: PROD-001" 
+                           class="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-slate-800 font-bold placeholder:text-slate-300 focus:ring-2 focus:ring-emerald-500 transition-all">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-slate-400 ml-4 mb-1 block">Monto Total ($)</label>
+                    <input type="number" id="vr-monto" placeholder="0" 
+                           class="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-slate-800 font-bold placeholder:text-slate-300 focus:ring-2 focus:ring-emerald-500 transition-all text-xl">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-slate-400 ml-4 mb-1 block">Detalles (Opcional)</label>
+                    <textarea id="vr-detalles" placeholder="Notas adicionales..." 
+                              class="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-slate-800 font-medium placeholder:text-slate-300 focus:ring-2 focus:ring-emerald-500 transition-all h-24 resize-none"></textarea>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-8">
+                <button onclick="cerrarModalVentaRapida()" 
+                        class="py-4 rounded-2xl font-bold uppercase text-slate-400 hover:bg-slate-100 transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="guardarVentaRapida()" 
+                        class="bg-emerald-600 py-4 rounded-2xl font-black uppercase text-white shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all">
+                    Registrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+</main>
+
+
+
+<script>
+//--- CONFIGURACIÓN DE LINKS DE GOOGLE SHEETS ---
+const URL_PRODUCTOS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQxmMtrLlKEH1uQUNmUvQxXUmFJQNQc46rwfOpKMNzJytrGDRxyMjo_S2DhQIDJmXTv1o6G2fvZQZgi/pubhtml?gid=1794389307&single=true_AQUÍ";
+const URL_PEDIDOS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQxmMtrLlKEH1uQUNmUvQxXUmFJQNQc46rwfOpKMNzJytrGDRxyMjo_S2DhQIDJmXTv1o6G2fvZQZgi/pub?gid=271238087&single=true&output=csv";
+
+
+let pedidos = JSON.parse(localStorage.getItem('z_pedidos')) || [];
+let historial = JSON.parse(localStorage.getItem('z_historial')) || [];
+let sigNum = parseInt(localStorage.getItem('z_sigNum')) || 1;
+let currentStep = parseFloat(localStorage.getItem('z_step')) || 0;
+let pActualID = localStorage.getItem('z_pActualID') || null;
+let baseDeDatosProductos = [];
+const ABC = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+// Biblioteca de iconos centralizada
+const ICONOS = {
+    caja: `<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
+    mapa: `<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`,
+    historial: `
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>`,
+   eliminar:  `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`,   
+   check: `<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>`,
+cliente: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+  <circle cx="12" cy="7" r="4"></circle>
+</svg>  `,
+
+telefono: `<svg class="w-4 h-4 inline-block mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>`,
+
+ruta:` <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+</svg>`,
+
+
+
+};
+
+// Ejemplo de uso en cualquier parte del código:
+function renderMenu() {
+    document.getElementById('menu').innerHTML = `
+        <button>${ICONOS.mapa} Ver Mapa</button>
+        <button>${ICONOS.caja} Mis Pedidos</button>
+    `;
+}
+
+// SONIDOS
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    if(type === 'scanner') {
+        osc.frequency.setValueAtTime(1800, audioCtx.currentTime); 
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.04);
+
+} 
+    else if(type === 'cash') { // <--- NUEVO SONIDO DE CAJA
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2); gain2.connect(audioCtx.destination);
+        
+        // Tono agudo inicial (el "clink")
+        osc.frequency.setValueAtTime(1500, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        
+        // Tono secundario resonante (el "ching")
+        osc2.frequency.setValueAtTime(800, audioCtx.currentTime + 0.05);
+        gain2.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain2.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.05);
+        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        osc2.start(audioCtx.currentTime + 0.05); osc2.stop(audioCtx.currentTime + 0.5);
+
+        
+    } else if(type === 'complete') {
+        [523.25, 659.25, 783.99].forEach((f, i) => {
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.setValueAtTime(f, audioCtx.currentTime + (i*0.1));
+            g.gain.setValueAtTime(0.1, audioCtx.currentTime + (i*0.1));
+            o.start(audioCtx.currentTime + (i*0.1)); o.stop(audioCtx.currentTime + 0.4);
+        });
+    }
+}
+
+// --- LOGICA CORE ---
+function save() {
+    localStorage.setItem('z_pedidos', JSON.stringify(pedidos));
+    localStorage.setItem('z_historial', JSON.stringify(historial));
+    localStorage.setItem('z_sigNum', sigNum);
+    localStorage.setItem('z_step', currentStep);
+    localStorage.setItem('z_pActualID', pActualID);
+    actualizarArqueoHeader();
+}
+
+function asignarLetrasFijas() {
+    pedidos.forEach((p, i) => { if(!p.letra) p.letra = ABC[i % 26]; });
+    save();
+}
+
+function retroceder() {
+    if (currentStep === 0.5) nextStep(0);
+    else if (currentStep === 1) nextStep(0.5);
+    else if (currentStep === 2) nextStep(1);
+    else if (currentStep === 3) nextStep(2);
+    else if (currentStep === 4) nextStep(3);
+    else if (currentStep === 5) nextStep(4); // <--- ESTA ES LA LÍNEA QUE FALTABA
+    else if (currentStep === 7) cerrarHistorial();
+}
+
+function nextStep(n) {
+    currentStep = n; 
+    save();
+    
+    // Gestión de clases active
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    const stepEl = document.getElementById(n === 0.5 ? 'step_picking' : `step${n}`);
+    if(stepEl) stepEl.classList.add('active');
+    
+    // Visibilidad del Header
+    document.getElementById('main-header').style.display = (n === 0) ? 'block' : 'none';
+    
+    // Control de botones de navegación (Volver y Home)
+    const backBtn = document.getElementById('global-back-btn');
+    const homeBtn = document.getElementById('btn-inicio-home'); // Nuevo botón
+    
+    if(n === 0) {
+        backBtn.classList.add('hidden');
+        if(homeBtn) homeBtn.classList.add('hidden');
+    } else {
+        backBtn.classList.remove('hidden');
+        if(homeBtn) homeBtn.classList.remove('hidden');
+    }
+    
+    // Renderizado de vistas
+    if(n === 0) renderStep0();
+    if(n === 0.5) renderPicking();
+    if(n === 1) renderChecklistCarga();
+    if(n === 2) renderStep2();
+    if(n === 3) renderStep3();
+    if(n === 4) renderVistaUnificada();
+    if(n === 5) {
+        let p = pedidos.find(x => x.id == pActualID);
+        if(p && p.temp_devoluciones) renderVerificacionDevoluciones(p.temp_devoluciones);
+    }
+    
+    window.scrollTo(0,0);
+}
+
+// Función auxiliar para el botón Home
+function irAlInicio() {
+    if(confirm("¿Volver a la pantalla principal?")) {
+        nextStep(0);
+    }
+}
+
+function toggleMasivo() { document.getElementById('area-masiva').classList.toggle('hidden'); }
+
+// --- LÓGICA DE CARGA MASIVA (ESTILO SHEETS) ---
+
+
+
+
+// Constantes para los iconos SVG
+const ICON_EDIT = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
+const ICON_DELETE = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`;
+
+
+
+function renderStep0() {
+    const lista = document.getElementById('lista-pre-carga');
+    if (!lista) return;
+
+    // 1. FILTRO CRÍTICO: Solo mostrar los pedidos con estado 'pendiente'
+    // Esto excluye las Ventas Rápidas que ya nacen como 'entregado'
+    const pedidosPendientes = pedidos.filter(p => p.estado === 'pendiente');
+
+    // 2. Renderizado de la lista filtrada
+    lista.innerHTML = pedidosPendientes.map((p, i) => {
+        // Determinamos la letra (usamos la del pedido o la calculamos por índice)
+        const letraLabel = p.letra || ABC[i % 26];
+        
+        return `
+        <div class="bg-white p-3 rounded-xl border border-slate-100 flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow" data-id="${p.id}">
+            <div class="bg-slate-900 text-white min-w-[36px] h-9 rounded-lg flex items-center justify-center font-bold text-sm">
+                ${letraLabel}
+            </div>
+            
+            <div class="flex-1 min-w-0">
+                <h4 class="font-bold text-[12px] truncate text-slate-800">${p.cliente}</h4>
+                
+                <div class="flex items-center gap-2 flex-wrap">
+                    <p class="text-[11px] truncate font-medium">${p.direccion}</p>
+                    <span class="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[9px] font-bold whitespace-nowrap">
+                        ${p.items.length} ${ICONOS.caja}
+                    </span>
+                    <span class="bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">
+                        $${(p.total || 0).toLocaleString()}
+                    </span>
+                </div>
+
+                ${p.detalles ? `
+                    <p class="text-[9px] text-slate-500 italic mt-1 leading-tight border-t border-slate-50 pt-1">
+                        <span class="font-bold">Nota:</span> ${p.detalles}
+                    </p>
+                ` : ''}
+            </div>
+
+            <div class="flex items-center border-l pl-2 gap-1">
+                <button onclick="editarPedido(${p.id})" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors">
+                    ${ICON_EDIT}
+                </button>
+                <button onclick="eliminarPedido(${p.id})" class="p-1.5 text-slate-300 hover:text-red-500 transition-colors">
+                    ${ICON_DELETE}
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+
+
+function guardarPedidoFormulario() {
+    // 1. Capturar valores de los inputs
+    const idExistente = document.getElementById('f-edit-id').value;
+    const cliente = document.getElementById('f-nombre').value;
+    const direccion = document.getElementById('f-direccion').value;
+    const telefono = document.getElementById('f-telefono').value;
+    const envio = parseFloat(document.getElementById('f-envio').value) || 0;
+    const total = parseFloat(document.getElementById('f-total').value) || 0;
+    const detalles = document.getElementById('f-detalles').value;
+
+    if (!cliente) {
+        alert("Por favor, ingresa al menos el nombre del cliente.");
+        return;
+    }
+
+    // 2. Capturar los productos (Mapeados a p.items como en tu render)
+    const items = [];
+    const filas = document.querySelectorAll('#contenedor-productos > div');
+    filas.forEach(fila => {
+        const desc = fila.querySelector('.f-nombre').value;
+        const cant = fila.querySelector('.f-cant').value || 1;
+        // Si tienes campos de precio o bin en el diseño, cápturalos aquí
+        if (desc) {
+            items.push({ 
+                desc: desc, 
+                cant: cant,
+                precio: 0, // Puedes agregar el input al HTML si lo necesitas
+                bin: '' 
+            });
+        }
+    });
+
+    if (idExistente) {
+        // MODO EDICIÓN: Buscar y actualizar
+        const index = pedidos.findIndex(p => p.id == idExistente);
+        if (index !== -1) {
+            pedidos[index] = {
+                ...pedidos[index],
+                cliente, direccion, telefono, envio, total, detalles, items
+            };
+        }
+    } else {
+        // MODO NUEVO: Crear objeto con tu estructura
+        const nuevoPedido = {
+            id: Date.now(),
+            cliente: cliente,
+            direccion: direccion,
+            telefono: telefono,
+            envio: envio,
+            total: total,
+            detalles: detalles,
+            items: items,
+            estado: 'pendiente', // Importante para tu filtro de renderStep0
+            letra: ABC[pedidos.filter(p => p.estado === 'pendiente').length % 26]
+        };
+        pedidos.push(nuevoPedido);
+    }
+
+    // 3. Limpiar, cerrar y refrescar
+    toggleForm(false);
+    renderStep0(); // Llamamos a tu función de renderizado
+}
+
+
+function toggleForm(show) {
+    const form = document.getElementById('contenedor-formulario');
+    if (show) {
+        form.classList.remove('hidden');
+    } else {
+        form.classList.add('hidden');
+        // Limpiar campos al cerrar
+        document.getElementById('f-edit-id').value = '';
+        document.getElementById('f-nombre').value = '';
+        document.getElementById('f-direccion').value = '';
+        document.getElementById('f-telefono').value = '';
+        document.getElementById('f-total').value = '';
+        document.getElementById('f-detalles').value = '';
+        document.getElementById('contenedor-productos').innerHTML = '';
+    }
+}
+
+
+    // 3. Actualizar visibilidad del botón de Picking basado solo en pendientes
+    const btnPicking = document.getElementById('btn-ir-a-picking');
+    if (btnPicking) {
+        btnPicking.classList.toggle('hidden', pedidosPendientes.length === 0);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+function renderPicking() {
+    const colores = [
+        'bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 
+        'bg-purple-500', 'bg-pink-500', 'bg-orange-500', 'bg-teal-500', 
+        'bg-indigo-500', 'bg-lime-500', 'bg-fuchsia-500', 'bg-cyan-500'
+    ];
+
+    let todosItems = [];
+    
+    // FILTRO: Solo tomamos pedidos con estado 'pendiente'
+    // Las Ventas Rápidas (estado: 'entregado') serán ignoradas automáticamente
+    const pedidosPendientes = pedidos.filter(p => p.estado === 'pendiente');
+
+    pedidosPendientes.forEach((p, i) => {
+        p.letra = ABC[i % 26];
+        p.color = colores[i % colores.length]; 
+        
+        p.items.forEach(it => {
+            todosItems.push({ 
+                ...it, 
+                nPedido: p.nPedido, 
+                letra: p.letra, 
+                color: p.color 
+            });
+        });
+    });
+
+    // 3. Agrupamos por Estante (Bin) y luego por Producto (Desc)
+    const agrupado = todosItems.reduce((acc, it) => {
+        const b = it.bin || 'S/U';
+        if (!acc[b]) acc[b] = {};
+        
+        if (!acc[b][it.desc]) {
+            acc[b][it.desc] = {
+                desc: it.desc,
+                cantidad: 0,
+                pedidosRelacionados: [] 
+            };
+        }
+        
+        acc[b][it.desc].cantidad += 1;
+        acc[b][it.desc].pedidosRelacionados.push({ letra: it.letra, color: it.color });
+        
+        return acc;
+    }, {});
+
+    let html = '';
+    for (const bin in agrupado) {
+        const unidadesEnBin = Object.values(agrupado[bin]).reduce((sum, item) => sum + item.cantidad, 0);
+
+        html += `
+        <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 mb-4 shadow-sm">
+            <div class="bg-slate-800 text-white px-4 py-2 text-[12px] font-black flex justify-between">
+                <span>Estante: ${bin}</span>
+                <span>${unidadesEnBin} ${ICONOS.caja}</span>
+            </div>
+            <div class="p-2 space-y-2">
+                ${Object.values(agrupado[bin]).map(it => `
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl has-[:checked]:opacity-30 transition-all border border-transparent has-[:checked]:border-slate-200">
+                        <input type="checkbox" onchange="validarPicking()" class="w-5 h-5 check-picking">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <span class="text font-black text-blue-500">${ICONOS.caja}x${it.cantidad}</span>
+                                    <span class="text-[10px] font-bold ml-1 text-slate-700">${it.desc}</span>
+                                </div>
+                                <div class="flex gap-1 flex-wrap justify-end">
+                                    ${it.pedidosRelacionados.map(p => `
+                                        <span class="${p.color} text-white w-6 h-6 rounded flex items-center justify-center text-[10px] font-black shadow-sm">
+                                            ${p.letra}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </label>`).join('')}
+            </div>
+        </div>`;
+    }
+    
+    document.getElementById('lista-picking').innerHTML = html || '<p class="text-center py-10">Sin productos por recolectar</p>';
+    validarPicking();
+}
+
+// La función validarPicking se mantiene igual ya que busca los checkboxes presentes
+function validarPicking() { 
+    playSound('scanner');
+
+
+    // playSound('scanner'); // Opcional: solo si quieres que suene al marcar
+    const todos = Array.from(document.querySelectorAll('.check-picking')).every(c => c.checked); 
+    const btn = document.getElementById('btn-picking-done'); 
+    btn.disabled = !todos; 
+    btn.className = todos 
+        ? "w-full mt-10 bg-blue-600 text-white font-black py-6 rounded-3xl" 
+        : "w-full mt-10 bg-slate-200 text-slate-400 font-black py-6 rounded-3xl uppercase"; 
+}
+
+function renderChecklistCarga() {
+    const coloresLetras = {
+        'A': 'bg-red-500', 'B': 'bg-blue-500', 'C': 'bg-green-500',
+        'D': 'bg-yellow-500', 'E': 'bg-purple-500', 'F': 'bg-pink-500',
+        'G': 'bg-orange-600', 'DEFAULT': 'bg-slate-500'
+    };
+
+    // FILTRO: Solo pedidos que están pendientes de ser cargados y enviados
+    const pedidosARuta = pedidos.filter(p => p.estado === 'pendiente');
+
+    document.getElementById('checklist-furgon').innerHTML = pedidosARuta.map((p, i) => {
+        const letra = (p.letra || '?').toUpperCase();
+        const colorClase = coloresLetras[letra] || coloresLetras['DEFAULT'];
+        const totalProductos = p.items ? p.items.length : 0;
+
+        return `
+        <label class="flex items-center gap-3 bg-white p-2.5 rounded-2xl border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/40 shadow-sm cursor-pointer active:scale-[0.98] transition-all mb-2">
+            
+            <input type="checkbox" class="w-6 h-6 check-carga accent-blue-600 ml-1" onchange="validarCarga()">
+            
+            <div class="${colorClase} w-10 h-10 min-w-[40px] flex items-center justify-center rounded-xl text-white text-xl font-black shadow-sm">
+                ${letra}
+            </div>
+
+            <div class="flex-1 min-w-0">
+                <div class="font-bold text-slate-800 text-[12px] leading-tight truncate">
+                    ${p.cliente}
+                </div>
+            </div>
+
+            <div class="text-[10px] font-black text-slate-700 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                ${ICONOS.caja} ${totalProductos} ${totalProductos === 1 ? 'Par' : 'Pares'}
+            </div>
+
+        </label>
+        `;
+    }).join('') || '<p class="text-center py-10 text-slate-400 italic">No hay pedidos pendientes para cargar</p>';
+    
+    // Si no hay pedidos para cargar (ej: solo hiciste ventas rápidas), habilitamos o ajustamos el botón
+    validarCarga(); 
+}
+
+function validarCarga() { 
+    playSound('scanner'); 
+    const checks = Array.from(document.querySelectorAll('.check-carga'));
+    
+    // Si no hay pedidos en la lista, el estado es "todos checkeados" por defecto
+    const todos = checks.length > 0 ? checks.every(c => c.checked) : false; 
+    
+    const btn = document.getElementById('btn-start-route'); 
+    if(!btn) return;
+
+    btn.disabled = !todos; 
+    btn.className = todos 
+        ? "w-full mt-10 bg-blue-600 text-white font-black py-6 rounded-3xl shadow-xl scale-105 transition-transform" 
+        : "w-full mt-10 bg-slate-200 text-slate-400 font-black py-6 rounded-3xl uppercase pointer-events-none"; 
+}
+
+function renderStep2() {
+    // 1. FILTRO: Solo pedidos pendientes
+    const pedidosARuta = pedidos.filter(p => p.estado === 'pendiente');
+    const totalPendientes = pedidosARuta.length;
+    
+    // Si no hay pendientes, volvemos al inicio o mostramos pantalla vacía
+    if (totalPendientes === 0) return nextStep(0);
+
+    // 2. DESESTRUCTURACIÓN: 'p' es el actual, 'resto' son los que siguen
+    const [p, ...resto] = pedidosARuta;
+    
+    const iconWS = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`;
+    const iconMaps = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+
+    const getMapsLink = (dir) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dir)}`;
+
+    // --- ACTUALIZAR CONTADOR (Asegúrate de tener un id="contador-texto" en tu HTML) ---
+    const contadorHTML = document.getElementById('contador-texto');
+    if (contadorHTML) {
+        contadorHTML.innerText = `${totalPendientes} ${totalPendientes === 1 ? 'pedido pendiente' : 'pedidos pendientes'}`;
+    }
+
+    // --- ENTREGA ACTUAL ---
+    document.getElementById('next-delivery-info').innerHTML = `
+        <div class="bg-slate-200 p-3 rounded-2xl border border-slate-300 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="bg-slate-800 text-white w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center font-black text-xl">
+                    ${p.letra}
+                </div>
+                
+                <div class="flex-1 min-w-0" onclick="abrirPerfil(${p.id})">
+                    <h1 class="text-[14px] font-black truncate text-slate-800">${p.cliente}</h1>
+                    <p class="text-[12px] text-slate-500 truncate mt-0.5 font-medium">${p.direccion}</p>
+                </div>
+
+                <div class="flex gap-1 ml-1">
+                    <a href="${getMapsLink(p.direccion)}" target="_blank" class="bg-white p-2.5 rounded-xl border border-slate-200 text-slate-600">
+                        ${iconMaps}
+                    </a>
+                    <a href="https://wa.me/${p.telefono}" class="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-emerald-600">
+                        ${iconWS}
+                    </a>
+                </div>
+            </div>
+            
+            ${p.detalles ? `
+                <div class="mt-2.5 py-2 px-3 bg-white rounded-xl border border-slate-100 text-[9px] text-slate-500  font-bold tracking-wider">
+                    <span class="text-slate-300 mr-1">/</span> ${p.detalles}
+                </div>
+            ` : ''}
+        </div>`;
+
+    // --- LISTA SIGUIENTES ---
+    document.getElementById('lista-ruta-activa').innerHTML = resto.map((item) => `
+        <div class="border p-1 rounded-2xl flex items-center gap-3 py-3 shadow-sm mb-2">
+            <div onclick="abrirPerfil(${item.id})" class="w-7 h-7 flex-shrink-0 flex items-center justify-center font-bold text-[10px] text-slate-800 bg-white border border-slate-400 rounded-lg">
+                ${item.letra}
+            </div>
+            
+            <div class="flex-1 min-w-0" onclick="abrirPerfil(${item.id})">
+                <div class="font-bold text-[14px]  truncate text-slate-700 leading-none">${item.cliente}</div>
+                <div class="text-[12px] text-slate-400 truncate mt-1 tracking-tight font-medium">${item.direccion}</div>
+            </div>
+            
+            <div class="flex gap-1">
+                <a href="${getMapsLink(item.direccion)}" target="_blank" class="p-2 text-slate-400">
+                    ${iconMaps}
+                </a>
+            </div>
+        </div>
+    `).join('');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function renderStep3() {
+    const p = pedidos.find(x => x.id == pActualID); 
+    if(!p) return nextStep(2);
+
+    // Inicializar la propiedad llamado si no existe
+    if (p.llamado === undefined) p.llamado = false;
+
+    // Iconos SVG
+    const iconBox = `<svg class="w-3 h-3 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`;
+    const iconMap = `<svg class="w-4 h-4 inline-block mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`;
+    const iconPhone = `<svg class="w-4 h-4 inline-block mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>`;
+
+    document.getElementById('cliente-perfil').innerHTML = `
+        <div class="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-200">
+            <div class="flex flex-col items-center text-center mb-8">
+                <div class="w-24 h-24 bg-slate-900 text-white rounded-[2rem] flex items-center justify-center font-black text-6xl shadow-2xl mb-6">${p.letra}</div>
+                <h2 class="text-4xl font-black leading-tight mb-4 tracking-tighter">${p.cliente}</h2>
+                <div class="flex flex-col gap-2">
+                    <p class="text-xl font-bold text-slate-600 leading-snug px-4">
+                        <span class="text-blue-500">${iconMap}</span> ${p.direccion}
+                    </p>
+                    <a href="tel:${p.telefono || '+561122334455'}" onclick="registrarLlamada(${p.id})" class="text-lg font-bold ${p.llamado ? 'text-green-600' : 'text-slate-400'} transition-colors">
+                        <span class="${p.llamado ? 'text-green-600' : 'text-green-500'}">${iconPhone}</span> 
+                        +56 ${p.telefono || '11 2233-4455'} 
+                        ${p.llamado ? '<span class="text-xs block">(Llamada registrada)</span>' : ''}
+                    </a>
+                </div>
+            </div>
+            <div class="bg-slate-70 p-4 rounded-2xl text-[9px] text-slate-900 space-y-1 border border-slate-200 opacity-90">
+                <p class="text-[9px] font-bold tracking-widest mb-1">Productos del pedido:</p>
+                ${p.items.map(it => `
+                    <div class="flex justify-between">
+                        <span>${iconBox} ${it.desc}</span> 
+                        <span>$${it.precio.toLocaleString()}</span>
+                    </div>`).join('')}
+            </div>
+        </div>`;
+
+    const ctrl = document.getElementById('controles-flujo');
+    
+    // El botón "continuar" ahora llama a validarContinuar en lugar de cambiarEstado directamente
+    let btnPrincipal = p.estado === 'pendiente' 
+        ? `<button onclick="validarContinuar(${p.id})" class="w-full text-white bg-blue-600 font-black py-6 rounded-3xl uppercase text-xl shadow-lg">continuar</button>`
+        : `<button onclick="nextStep(4)" class="w-full bg-blue-600 text-white font-black py-6 rounded-3xl shadow-lg uppercase text-xl animate-pulse">Llegué / Entregar</button>`;
+
+    ctrl.innerHTML = `
+        <div class="flex flex-col gap-4">
+            ${btnPrincipal}
+        </div>
+    `;
+}
+
+// Función de confirmación para evitar errores
+function confirmarCancelacion() {
+    if(confirm("¿Seguro que quieres cancelar este pedido?")) {
+        // Tu lógica para cancelar aquí
+        console.log("Pedido cancelado");
+        nextStep(2);
+    }
+}
+
+function renderVistaUnificada() {
+    let p = pedidos.find(x => x.id == pActualID); 
+    if(!p) return;
+    
+    // Generamos la lista de ítems compacta
+document.getElementById('multi-venta-selector').innerHTML = p.items.map((it, idx) => `
+    <div id="item-row-${idx}" 
+         onclick="const c = document.querySelector('.check-${idx}'); c.checked = !c.checked; actualizarEstadoSimple(${idx})" 
+         class="flex justify-between items-center bg-white py-3 px-4 rounded-2xl border border-slate-200 shadow-sm mb-2 active:scale-[0.98] transition-all cursor-pointer">
+        
+        <div class="flex items-center gap-3">
+            <input type="checkbox" 
+                   class="w-6 h-6 venta-check-consolidado check-${idx} appearance-none border-2 border-slate-300 checked:bg-blue-600 rounded-lg transition-all" 
+                   data-idx="${idx}" 
+                   onclick="event.stopPropagation();" 
+                   onchange="actualizarEstadoSimple(${idx})">
+            
+            <div class="leading-tight">
+                <span class="font-bold uppercase text-xs text-slate-700">${ICONOS.caja} ${it.desc}</span>
+                <p id="label-estado-${idx}" class="text-[9px] font text-slate-400  tracking-wider">Pendiente</p>
+            </div>
+        </div>
+        
+        <span class=" font-black text-slate-900 text-[10px]">$${it.precio.toLocaleString()}</span>
+    </div>`).join('');
+    
+    document.getElementById('envio-detalle-pequeno').innerText = `Envío: $${p.envio.toLocaleString()}`;
+    recalcularTotalConsolidado(); 
+}
+
+function actualizarEstadoSimple(idx) {
+    const check = document.querySelector(`.check-${idx}`);
+    const row = document.getElementById(`item-row-${idx}`);
+    const label = document.getElementById(`label-estado-${idx}`);
+
+    if(check.checked) {
+        row.classList.add('border-blue-500', 'bg-blue-50');
+        row.classList.remove('border-slate-100', 'bg-white');
+        label.innerText = "Seleccionado para venta";
+        label.className = "text-[9px] font-bold text-blue-600 uppercase";
+    } else {
+        row.classList.remove('border-blue-500', 'bg-blue-50');
+        row.classList.add('border-slate-100', 'bg-white');
+        label.innerText = "Pendiente";
+        label.className = "text-[9px] font text-slate-400";
+    }
+    recalcularTotalConsolidado();
+}
+
+function recalcularTotalConsolidado() {
+    let p = pedidos.find(x => x.id == pActualID); 
+    if(!p) return;
+    
+    const checks = document.querySelectorAll('.venta-check-consolidado');
+    let subtotal = 0;
+    
+    checks.forEach(c => { 
+        if(c.checked) {
+            subtotal += p.items[c.dataset.idx].precio; 
+        }
+    });
+
+    const totalFinal = subtotal + p.envio;
+    document.getElementById('total-cobro-consolidado').innerText = `$${totalFinal.toLocaleString()}`;
+}
+
+function marcarTodo(check) {
+    const checks = document.querySelectorAll('.venta-check-consolidado');
+    checks.forEach((c, idx) => {
+        c.checked = check;
+        toggleItemVisual(idx);
+    });
+}
+
+function toggleItemVisual(idx) {
+    const check = document.querySelector(`.venta-check-consolidado[data-idx="${idx}"]`);
+    const row = document.getElementById(`item-row-${idx}`);
+    const label = document.getElementById(`label-${idx}`);
+    const status = document.getElementById(`status-${idx}`);
+
+    if(check.checked) {
+        // SI LO SELECCIONAS: ES VENTA
+        row.className = "flex justify-between items-center bg-emerald-50 p-5 rounded-3xl border-2 border-emerald-500 transition-all mb-3 shadow-sm";
+        label.className = "font-black uppercase text-sm text-emerald-900";
+        status.innerText = "✅ VENDIDO";
+        status.className = "text-[10px] font-black text-emerald-600 uppercase tracking-widest";
+    } else {
+        // SI LO DESMARCAS: ES DEVOLUCIÓN
+        row.className = "flex justify-between items-center bg-red-50 p-5 rounded-3xl border-2 border-red-400 opacity-70 transition-all mb-3";
+        label.className = "font-black uppercase text-sm text-red-400 line-through";
+        status.innerText = "❌ DEVOLUCIÓN";
+        status.className = "text-[10px] font-black text-red-500 uppercase tracking-widest";
+    }
+    
+    recalcularTotalConsolidado();
+}
+
+function recalcularTotalConsolidado() {
+    let p = pedidos.find(x => x.id == pActualID); 
+    if(!p) return;
+    
+    const checks = document.querySelectorAll('.venta-check-consolidado');
+    let subtotal = 0;
+    let cantVendidos = 0;
+    let cantDevueltos = 0;
+    
+    checks.forEach(c => { 
+        if(c.checked) {
+            subtotal += p.items[c.dataset.idx].precio; 
+            cantVendidos++;
+        } else {
+            cantDevueltos++;
+        }
+    });
+
+    p.totalFinal = subtotal + p.envio;
+    
+    // Actualizamos el dinero
+    document.getElementById('total-cobro-consolidado').innerText = `$${p.totalFinal.toLocaleString()}`;
+    
+    // NUEVO: Actualizamos el "Tablero de Control" (Crea estos IDs en tu HTML o usa este bloque)
+    const infoControl = `
+        <div class="flex justify-around bg-slate-100 rounded-2xl p-3 mb-4 border border-slate-200">
+            <div class="text-center">
+                <p class="text-[8px] font-black text-slate-400 uppercase">Entregas</p>
+                <p class="text-xl font-black text-emerald-600">${cantVendidos}</p>
+            </div>
+            <div class="border-l border-slate-300"></div>
+            <div class="text-center">
+                <p class="text-[8px] font-black text-slate-400 uppercase">Devoluciones</p>
+                <p class="text-xl font-black text-red-500">${cantDevueltos}</p>
+            </div>
+        </div>
+    `;
+    
+    // Insertamos este tablero antes de la lista de productos
+    let tableroContainer = document.getElementById('tablero-resumen');
+    if(tableroContainer) tableroContainer.innerHTML = infoControl;
+
+    if(typeof calcularVueltoConsolidado === "function") calcularVueltoConsolidado();
+}
+
+function calcularVueltoConsolidado() {
+    let p = pedidos.find(x => x.id == pActualID); if(!p) return;
+    const monto = parseFloat(document.getElementById('paga-con').value) || 0;
+    const box = document.getElementById('vuelto-box');
+    if(monto >= p.totalFinal && monto > 0) { 
+        box.classList.remove('hidden'); 
+        document.getElementById('vuelto-monto').innerText = `VUELTO: $${(monto - p.totalFinal).toLocaleString()}`; 
+    } else { box.classList.add('hidden'); }
+}
+
+function finalizarEntrega() {
+    const met = document.getElementById('metodo-pago').value; 
+    if(!met) return alert("Selecciona método de pago");
+
+    let p = pedidos.find(x => x.id == pActualID);
+    
+
+
+    // Guardamos qué se vendió y qué se devolvió específicamente
+    const checks = document.querySelectorAll('.venta-check-consolidado');
+    p.vendidos = [];
+    p.devoluciones = [];
+
+    checks.forEach(c => {
+        if(c.checked) {
+            p.vendidos.push(p.items[c.dataset.idx]);
+        } else {
+            p.devoluciones.push(p.items[c.dataset.idx]);
+        }
+    });
+
+    p.estado = 'completado';
+    p.metodoPago = met;
+    p.horaFinal = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    historial.unshift({...p}); 
+    pedidos = pedidos.filter(x => x.id != pActualID);
+    save();
+    
+    nextStep(pedidos.length === 0 ? 0 : 2);
+}
+
+function irAVerificacion() {
+    const met = document.getElementById('metodo-pago').value; 
+    if(!met) return alert("Selecciona método de pago antes de continuar");
+
+    // --- EL SONIDO VA AQUÍ ---
+    playSound('cash');
+
+    let p = pedidos.find(x => x.id == pActualID);
+    const checks = document.querySelectorAll('.venta-check-consolidado');
+    
+    // Guardamos temporalmente qué se marcó como vendido
+    p.temp_vendidos = [];
+    p.temp_devoluciones = [];
+
+    checks.forEach(c => {
+        if(c.checked) p.temp_vendidos.push(p.items[c.dataset.idx]);
+        else p.temp_devoluciones.push(p.items[c.dataset.idx]);
+    });
+
+    // Si no hay devoluciones, saltamos directo al final
+    if (p.temp_devoluciones.length === 0) {
+        confirmarFinalTotal();
+        return;
+    }
+
+    renderVerificacionDevoluciones(p.temp_devoluciones);
+    nextStep(5);
+}
+
+function renderVerificacionDevoluciones(devoluciones) {
+    const lista = document.getElementById('lista-verificacion-devoluciones');
+    lista.innerHTML = devoluciones.map((it, idx) => `
+        <label class="flex justify-between items-center bg-white p-2 rounded-3xl border-2 border-transparent has-[:checked]:border-red-500 shadow-sm transition-all">
+            <div class="flex items-center gap-4">
+                <input type="checkbox" class="w-8 h-8 check-retorno appearance-none border-2 border-slate-200 checked:bg-red-500 rounded-xl transition-all" onchange="validarChecklistRetorno()">
+                <div>
+                    <p class="font-black text-slate-800 uppercase text-sm">${it.desc}</p>
+                    <p class="text-[9px] font- text-red-500 ">Debes recuperarlo</p>
+                </div>
+            </div>
+            <span class="text-[9px]">${ICONOS.caja}</span>
+        </label>
+    `).join('');
+}
+
+function validarChecklistRetorno() {
+    const todos = Array.from(document.querySelectorAll('.check-retorno')).every(c => c.checked);
+    const btn = document.getElementById('btn-cerrar-ruta');
+    btn.disabled = !todos;
+    btn.className = todos 
+        ? "w-full bg-emerald-600 text-white font-black py-7 rounded-[2rem] shadow-xl text-lg uppercase animate-pulse" 
+        : "w-full bg-slate-200 text-slate-400 font-black py-7 rounded-[2rem] text-lg uppercase";
+}
+
+function confirmarFinalTotal() {
+    let p = pedidos.find(x => x.id == pActualID);
+    
+    // Ahora sí, pasamos los datos temporales al historial final
+    p.vendidos = p.temp_vendidos || p.items;
+    p.devoluciones = p.temp_devoluciones || [];
+    p.metodoPago = document.getElementById('metodo-pago').value;
+    p.estado = 'completado';
+    p.fechaFinal = new Date().toLocaleDateString();
+    p.horaFinal = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    historial.unshift({...p}); 
+    pedidos = pedidos.filter(x => x.id != pActualID);
+    
+    playSound('complete');
+    pActualID = null;
+    save();
+
+
+    
+    // Volvemos a la ruta o al inicio
+    nextStep(pedidos.length === 0 ? 0 : 2);
+}
+
+
+function moverAlFinal() { let idx = pedidos.findIndex(x => x.id == pActualID); if (idx !== -1) { const p = pedidos.splice(idx, 1)[0]; pedidos.push(p); save(); pActualID = null; nextStep(2); } }
+function abrirPerfil(id) { pActualID = id; nextStep(3); }
+function cambiarEstado(est) { let p = pedidos.find(x => x.id == pActualID); if(p) p.estado = est; save(); renderStep3(); }
+function cancelarPedido() { if(!confirm("¿Cancelar este pedido?")) return; let p = pedidos.find(x => x.id == pActualID); if(!p) return; p.estado = 'cancelado'; p.fechaFinal = new Date().toLocaleDateString(); p.horaFinal = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); historial.unshift({...p}); pedidos = pedidos.filter(x => x.id != pActualID); pActualID = null; save(); nextStep(pedidos.length > 0 ? 2 : 0); }
+
+// Variable global para controlar qué pestaña ver (puedes inicializarla en 0)
+let filtroHistorial = 'completado'; 
+
+function verHistorial(filtro = 'completado') {
+    filtroHistorial = filtro;
+    const listaH = document.getElementById('lista-historial');
+    if (!listaH) return;
+
+    // Combinamos pedidos actuales e historial cargado
+    const todos = [...pedidos, ...historial];
+    
+    // Aplicamos el filtro según el tab seleccionado
+    const filtrados = todos.filter(h => {
+        if (filtro === 'completado') return h.estado === 'completado';
+        if (filtro === 'cancelado') return h.estado === 'cancelado';
+        if (filtro === 'pendiente') return h.estado === 'pendiente' || !h.estado;
+        return true;
+    });
+
+    const contenidoHistorial = filtrados.map(h => {
+        // Estilo de badge según estado
+        let colorE = h.estado === 'completado' ? 'text-emerald-500 bg-emerald-50' : (h.estado === 'cancelado' ? 'text-red-400 bg-red-50' : 'text-blue-500 bg-blue-50');
+        
+        // Determinar qué ítems mostrar
+        const itemsAMostrar = (h.estado === 'completado' && h.vendidos) ? h.vendidos : h.items;
+        
+        let prodHtml = itemsAMostrar.map(it => `
+            <div class="flex justify-between items-center text-[11px] mb-1">
+                <span class="text-slate-600 truncate mr-2">• ${it.desc}</span>
+                <span class="text-slate-400 font-mono flex-shrink-0">$${(it.precio || 0).toLocaleString()}</span>
+            </div>
+        `).join('');
+            
+        // Cálculo de monto (Prioriza totalFinal de Venta Rápida o calcula de ítems)
+        const monto = h.totalFinal || (h.items.reduce((acc, it) => acc + (it.precio || 0), 0) + (h.envio || 0));
+        const mostrarMonto = h.estado !== 'cancelado';
+
+        return `
+            <div class="bg-white p-4 rounded-2xl border border-slate-100 mb-3 shadow-sm relative">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${colorE}">
+                            ${h.estado || 'Pendiente'} • ${h.fechaFinal || 'Hoy'}
+                        </span>
+                        <h4 class="font-bold uppercase mt-1 text-slate-800 text-xs">${h.cliente}</h4>
+                    </div>
+                    
+                    <button onclick="editarDesdeHistorial(${h.id})" class="p-2 bg-slate-50 text-slate-400 rounded-xl active:bg-blue-50 active:text-blue-600 transition-all shadow-sm">
+                        ${ICON_EDIT}
+                    </button>
+                </div>
+                
+                <p class="text-[10px] text-slate-500 uppercase mb-1">${ICONOS.mapa || '📍'} ${h.direccion}</p>
+                
+                <div class="my-3 py-2 border-y border-slate-50">
+                    ${prodHtml}
+                </div>
+
+                <div class="flex justify-between items-center mt-2">
+                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">${h.metodoPago || 'EFECTIVO'}</span>
+                    ${mostrarMonto ? `<span class="font-black text-emerald-600 text-sm">$${monto.toLocaleString()}</span>` : '<span class="text-red-400 font-bold text-[10px] uppercase">Sin Cargo</span>'}
+                </div>
+            </div>`;
+    }).join('') || '<p class="text-center text-slate-400 py-10 text-xs italic">Sin registros</p>';
+
+    // Estructura de la Interfaz del Historial
+    listaH.innerHTML = `
+        <div class="sticky top-0 bg-slate-50/95 backdrop-blur-sm z-20 pb-2">
+            <div class="flex justify-between items-center py-3 px-1">
+                <h2 class="font-black text-slate-800 uppercase text-sm">Historial de Ventas</h2>
+                <div class="flex gap-2">
+                    <button onclick="exportarASheets()" class="bg-emerald-500 text-white p-2 rounded-lg shadow-lg active:scale-95 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    </button>
+                    <button onclick="nextStep(0)" class="bg-slate-800 text-white px-4 py-1 rounded-xl text-[10px] font-bold uppercase shadow-lg">Cerrar</button>
+                </div>
+            </div>
+
+            <div class="flex bg-slate-200 p-1 rounded-xl gap-1">
+                ${['completado', 'pendiente', 'cancelado'].map(t => `
+                    <button onclick="verHistorial('${t}')" 
+                        class="flex-1 py-2 rounded-lg text-[9px] font-black uppercase transition-all 
+                        ${filtroHistorial === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}">
+                        ${t}s
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+        <div class="mt-4 pb-20">${contenidoHistorial}</div>
+    `;
+
+    nextStep(7); // Cambia a la vista del historial
+}
+
+// Función para exportar a un CSV que Sheets pueda abrir
+function exportarASheets() {
+    const todos = [...pedidos, ...historial];
+    if(todos.length === 0) return alert("No hay datos para exportar");
+
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+    csvContent += "N Pedido,Fecha,Cliente,Direccion,Telefono,Items,Estado,Metodo Pago,Total\n";
+
+    todos.forEach(h => {
+        const itemsStr = h.items.map(i => i.desc).join(" | ");
+        const monto = h.estado === 'cancelado' ? 0 : (h.totalFinal || h.items.reduce((acc, it) => acc + it.precio, 0) + (h.envio || 0));
+        
+        const fila = [
+            h.nPedido,
+            h.fechaFinal || 'Hoy',
+            `"${h.cliente}"`,
+            `"${h.direccion}"`,
+            h.telefono,
+            `"${itemsStr}"`,
+            h.estado,
+            h.metodoPago || '---',
+            monto
+        ];
+        csvContent += fila.join(",") + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `historial_pedidos_${new Date().toLocaleDateString()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function actualizarArqueoHeader() {
+    let efec = 0, digi = 0;
+    historial.forEach(h => { if(h.estado === 'completado') { if(h.metodoPago === 'Efectivo') efec += h.totalFinal; else digi += h.totalFinal; } });
+    document.getElementById('h-efectivo').innerText = `EFECTIVO $${efec.toLocaleString()}`;
+    document.getElementById('h-digital').innerText = `Digital $${digi.toLocaleString()}`;
+}
+function cerrarHistorial() { nextStep(pedidos.length > 0 ? 2 : 0); }
+function resetFormulario() { document.getElementById('f-edit-id').value = ""; document.getElementById('f-nombre').value = ""; document.getElementById('f-direccion').value = ""; document.getElementById('f-telefono').value = ""; document.getElementById('f-envio').value = ""; document.getElementById('contenedor-productos').innerHTML = ""; agregarFilaProducto(); }
+function eliminarPedido(id) { if(confirm("¿Eliminar?")) { pedidos = pedidos.filter(x => x.id != id); save(); renderStep0(); } }
+function limpiarTodo() { if(confirm("¿Borrar todo?")) { localStorage.clear(); location.reload(); } }
+function llamar() { let p = pedidos.find(x => x.id == pActualID); if(p) window.location.href = `tel:${p.telefono}`; }
+function abrirMapa() { let p = pedidos.find(x => x.id == pActualID); if(p) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.direccion)}`); }
+
+window.onload = () => { if(currentStep > 0) nextStep(currentStep); else renderStep0(); actualizarArqueoHeader(); };
+
+Sortable.create(document.getElementById('lista-pre-carga'), { animation: 200, onEnd: () => {
+    let nuevos = []; document.querySelectorAll('#lista-pre-carga > div').forEach(el => nuevos.push(pedidos.find(p => p.id == el.dataset.id)));
+    pedidos = nuevos; save(); renderStep0();
+}});
+agregarFilaProducto();
+
+// Función auxiliar para buscar en la DB
+function buscarEnDB(codigo) {
+    return baseDeDatosProductos.find(p => p.codigo === codigo.toUpperCase()) || null;
+}
+
+async function sincronizarPedidosDesdeSheets(event) {
+    if(!confirm("¿Sincronizar pedidos desde Google Sheets?")) return;
+    
+    // --- CONFIGURACIÓN DE COLUMNAS ACTUALIZADA (A=0, B=1, C=2...) ---
+    const COL = {
+        CODIGO: 2,    // Columna C
+        PRECIO: 3,    // Columna D
+        BIN: 4,       // Columna E
+        ENVIO: 5,     // Columna F
+        TOTAL: 6,     // Columna G (Nueva)
+        CLIENTE: 7,   // Columna H (Antes era 6)
+        DIRECCION: 8, // Columna I (Antes era 7)
+        TELEFONO: 9,  // Columna J (Antes era 8)
+        DETALLES: 10  // Columna K (Nueva)
+    };
+    // ------------------------------------------------------------------
+
+    try {
+        console.log("--- INICIANDO SINCRONIZACIÓN ---");
+        const respuesta = await fetch(URL_PEDIDOS_CSV);
+        let textoFull = await respuesta.text();
+        
+        textoFull = textoFull.replace(/^\uFEFF/, '');
+        
+        const filas = textoFull.split(/\r?\n/).filter(linea => linea.trim() !== "");
+        const datos = filas.slice(1); 
+        
+        if (datos.length === 0) return;
+
+        const separador = datos[0].includes(',') ? ',' : ';';
+        let ultimoPedido = null;
+        let count = 0;
+
+        datos.forEach((linea, index) => {
+            const d = linea.split(separador).map(celda => celda.trim().replace(/^"|"$/g, ''));
+            
+            const nombreCliente = d[COL.CLIENTE] || "";
+            const cod = d[COL.CODIGO]?.toUpperCase();
+
+            if(!cod) {
+                console.warn(`Fila ${index + 2} omitida: Sin código en columna definida.`);
+                return;
+            }
+
+            const dbInfo = buscarEnDB(cod);
+
+            if (nombreCliente !== "") {
+                // Se crea un pedido nuevo
+                ultimoPedido = {
+                    id: Date.now() + Math.random(),
+                    nPedido: sigNum++,
+                    cliente: nombreCliente,
+                    direccion: d[COL.DIRECCION] || '',
+                    telefono: d[COL.TELEFONO] || '',
+                    envio: parseInt(d[COL.ENVIO]) || 0,
+                    total: parseInt(d[COL.TOTAL]) || 0, // Nueva propiedad
+                    detalles: d[COL.DETALLES] || '',    // Nueva propiedad
+                    items: [{
+                        desc: cod,
+                        precio: parseInt(d[COL.PRECIO]) || dbInfo?.precio || 0,
+                        bin: d[COL.BIN] ? d[COL.BIN].toUpperCase() : (dbInfo?.bin || 'S/U')
+                    }],
+                    estado: 'pendiente'
+                };
+                pedidos.push(ultimoPedido);
+                count++;
+            } 
+            else if (ultimoPedido) {
+                // Es un ítem adicional para el mismo pedido
+                ultimoPedido.items.push({
+                    desc: cod,
+                    precio: parseInt(d[COL.PRECIO]) || dbInfo?.precio || 0,
+                    bin: d[COL.BIN] ? d[COL.BIN].toUpperCase() : (dbInfo?.bin || 'S/U')
+                });
+            }
+        });
+
+        save();
+        renderStep0();
+        alert(`Sincronización exitosa: ${count} pedidos nuevos.`);
+        
+    } catch (e) {
+        alert("Error crítico. Revisa la consola.");
+        console.error(e);
+    }
+}
+
+function seleccionarMetodo(elemento, valor) {
+    // 1. Quitar clases activas de todos los botones
+    document.querySelectorAll('.metodo-btn').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-600');
+        btn.classList.add('border-slate-100', 'text-slate-500');
+    });
+
+    // 2. Aplicar clases al seleccionado
+    elemento.classList.remove('border-slate-100', 'text-slate-500');
+    elemento.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-600');
+
+    // 3. Guardar el valor en el input oculto original
+    document.getElementById('metodo-pago').value = valor;
+
+    // 4. Mostrar/Ocultar el cálculo de vuelto si es Efectivo
+    const contenedorVuelto = document.getElementById('contenedor-vuelto');
+    if (valor === 'Efectivo') {
+        contenedorVuelto.classList.remove('hidden');
+        document.getElementById('paga-con').focus();
+    } else {
+        contenedorVuelto.classList.add('hidden');
+        document.getElementById('paga-con').value = '';
+        document.getElementById('vuelto-box').classList.add('hidden');
+    }
+}
+
+// 1. Marca que el repartidor intentó llamar al cliente
+function registrarLlamada(id) {
+    const p = pedidos.find(x => x.id == id);
+    if (p) {
+        p.llamado = true;
+        // Re-renderizamos para que el color del teléfono cambie a verde
+        renderStep3();
+    }
+}
+
+// 2. Valida si se puede continuar
+function validarContinuar(id) {
+    const p = pedidos.find(x => x.id == id);
+    
+    if (p && !p.llamado) {
+        // Si no ha llamado, lanzamos la confirmación de navegador
+        const confirmar = confirm("¿Está seguro de continuar sin llamar al cliente antes?");
+        if (!confirmar) return; // Si cancela, no hace nada
+    }
+    
+    // Si ya llamó o si aceptó el riesgo, procede
+    cambiarEstado('en-camino');
+}
+
+// Abrir el modal y limpiar campos
+function abrirModalVentaRapida() {
+    const modal = document.getElementById('modal-venta-rapida');
+    modal.classList.remove('hidden');
+    // Limpiar inputs
+    document.getElementById('vr-codigo').value = '';
+    document.getElementById('vr-monto').value = '';
+    document.getElementById('vr-detalles').value = '';
+    document.getElementById('vr-codigo').focus();
+}
+
+// Cerrar el modal
+function cerrarModalVentaRapida() {
+    document.getElementById('modal-venta-rapida').classList.add('hidden');
+}
+
+function guardarVentaRapida() {
+    const codigo = document.getElementById('vr-codigo').value.trim();
+    const monto = parseFloat(document.getElementById('vr-monto').value);
+    const detalles = document.getElementById('vr-detalles').value.trim();
+
+    if (!codigo || isNaN(monto)) {
+        alert("Por favor completa los datos");
+        return;
+    }
+
+    const nuevaVenta = {
+        id: Date.now(),
+        cliente: `⚡ VR: ${codigo}`,
+        direccion: "VENTA DIRECTA LOCAL",
+        estado: 'completado', // Coincide con el filtro de verHistorial
+        fechaFinal: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        metodoPago: 'EFECTIVO',
+        totalFinal: monto,
+        detalles: detalles,
+        items: [{ 
+            desc: `PROD: ${codigo}`, 
+            precio: monto 
+        }]
+    };
+
+    pedidos.push(nuevaVenta);
+    
+    cerrarModalVentaRapida();
+    renderStep0(); // Actualiza la lista principal (donde no aparecerá por estar completado)
+    verHistorial('completado'); // Abre el historial para confirmar la venta
+}
+
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
